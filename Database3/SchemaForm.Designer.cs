@@ -16,6 +16,10 @@
         private Label lblFieldName;
         private Label lblFieldType;
         private Label lblFieldsList;
+        private Label upperBoundLabel;
+        private Label lowerBoundLabel;
+        private TextBox lowerBoundTextBox;
+        private TextBox upperBoundTextBox;
         /// <summary>
         /// Clean up any resources being used.
         /// </summary>
@@ -35,129 +39,178 @@
         /// Required method for Designer support - do not modify
         /// the contents of this method with the code editor.
         /// </summary>
+        /// 
+
+        private void InitializeTimeintControls()
+        {
+            // Створюємо поля для нижньої та верхньої меж
+            lowerBoundLabel = new Label
+            {
+                Text = "Lower Bound (HH:MM)",
+                Location = new System.Drawing.Point(20, 150),
+                Visible = false
+            };
+            this.Controls.Add(lowerBoundLabel);
+
+            lowerBoundTextBox = new TextBox
+            {
+                Location = new System.Drawing.Point(130, 150),
+                Width = 100,
+                Visible = false
+            };
+            this.Controls.Add(lowerBoundTextBox);
+
+            upperBoundLabel = new Label
+            {
+                Text = "Upper Bound (HH:MM)",
+                Location = new System.Drawing.Point(20, 180),
+                Visible = false
+            };
+            this.Controls.Add(upperBoundLabel);
+
+            upperBoundTextBox = new TextBox
+            {
+                Location = new System.Drawing.Point(130, 180),
+                Width = 100,
+                Visible = false
+            };
+            this.Controls.Add(upperBoundTextBox);
+
+            // Зміна видимості при виборі типу timeint
+            cmbFieldType.SelectedIndexChanged += (sender, e) =>
+            {
+                string selectedType = cmbFieldType.SelectedItem.ToString().ToLower();
+                if (selectedType == "timeint")
+                {
+                    lowerBoundLabel.Visible = true;
+                    lowerBoundTextBox.Visible = true;
+                    upperBoundLabel.Visible = true;
+                    upperBoundTextBox.Visible = true;
+                }
+                else
+                {
+                    lowerBoundLabel.Visible = false;
+                    lowerBoundTextBox.Visible = false;
+                    upperBoundLabel.Visible = false;
+                    upperBoundTextBox.Visible = false;
+                }
+            };
+        }
         private void InitializeComponent()
         {
-            // Initialize and configure controls
-            this.txtTableName = new System.Windows.Forms.TextBox();
-            this.txtFieldName = new System.Windows.Forms.TextBox();
-            this.cmbFieldType = new System.Windows.Forms.ComboBox();
-            this.lstFields = new System.Windows.Forms.ListBox();
-            this.btnAddField = new System.Windows.Forms.Button();
-            this.btnSaveSchema = new System.Windows.Forms.Button();
-
-            // Initialize Labels
-            this.lblTableName = new System.Windows.Forms.Label();
-            this.lblFieldName = new System.Windows.Forms.Label();
-            this.lblFieldType = new System.Windows.Forms.Label();
-            this.lblFieldsList = new System.Windows.Forms.Label();
-
+            txtTableName = new TextBox();
+            txtFieldName = new TextBox();
+            cmbFieldType = new ComboBox();
+            lstFields = new ListBox();
+            btnAddField = new Button();
+            btnSaveSchema = new Button();
+            lblTableName = new Label();
+            lblFieldName = new Label();
+            lblFieldType = new Label();
+            lblFieldsList = new Label();
+            SuspendLayout();
             // 
             // txtTableName
             // 
-            this.txtTableName.Location = new System.Drawing.Point(120, 20);
-            this.txtTableName.Name = "txtTableName";
-            this.txtTableName.Size = new System.Drawing.Size(150, 20);
-
+            txtTableName.Location = new Point(120, 20);
+            txtTableName.Name = "txtTableName";
+            txtTableName.Size = new Size(150, 27);
+            txtTableName.TabIndex = 0;
             // 
             // txtFieldName
             // 
-            this.txtFieldName.Location = new System.Drawing.Point(120, 60);
-            this.txtFieldName.Name = "txtFieldName";
-            this.txtFieldName.Size = new System.Drawing.Size(150, 20);
-
+            txtFieldName.Location = new Point(120, 60);
+            txtFieldName.Name = "txtFieldName";
+            txtFieldName.Size = new Size(150, 27);
+            txtFieldName.TabIndex = 1;
             // 
             // cmbFieldType
             // 
-            this.cmbFieldType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbFieldType.Items.AddRange(new object[] {
-    "string",
-    "int",
-    "real",
-    "time",
-    "timeint",
-    "char" 
-});
-            this.cmbFieldType.Location = new System.Drawing.Point(120, 100);
-            this.cmbFieldType.Name = "cmbFieldType";
-            this.cmbFieldType.Size = new System.Drawing.Size(150, 21);
-
+            cmbFieldType.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbFieldType.Items.AddRange(new object[] { "string", "int", "real", "time", "timeint", "char" });
+            cmbFieldType.Location = new Point(120, 100);
+            cmbFieldType.Name = "cmbFieldType";
+            cmbFieldType.Size = new Size(150, 28);
+            cmbFieldType.TabIndex = 2;
             // 
             // lstFields
             // 
-            this.lstFields.Location = new System.Drawing.Point(20, 160);
-            this.lstFields.Name = "lstFields";
-            this.lstFields.Size = new System.Drawing.Size(250, 150);
-
+            lstFields.Location = new Point(20, 252);
+            lstFields.Name = "lstFields";
+            lstFields.Size = new Size(250, 144);
+            lstFields.TabIndex = 3;
             // 
             // btnAddField
             // 
-            this.btnAddField.Location = new System.Drawing.Point(20, 320);
-            this.btnAddField.Name = "btnAddField";
-            this.btnAddField.Size = new System.Drawing.Size(75, 23);
-            this.btnAddField.Text = "Add Field";
-            this.btnAddField.Click += new System.EventHandler(this.btnAddField_Click);
-
+            btnAddField.Location = new Point(20, 402);
+            btnAddField.Name = "btnAddField";
+            btnAddField.Size = new Size(75, 23);
+            btnAddField.TabIndex = 4;
+            btnAddField.Text = "Add Field";
+            btnAddField.Click += btnAddField_Click;
             // 
             // btnSaveSchema
             // 
-            this.btnSaveSchema.Location = new System.Drawing.Point(195, 320);
-            this.btnSaveSchema.Name = "btnSaveSchema";
-            this.btnSaveSchema.Size = new System.Drawing.Size(75, 23);
-            this.btnSaveSchema.Text = "Save Schema";
-            this.btnSaveSchema.Click += new System.EventHandler(this.btnSaveSchema_Click);
-
+            btnSaveSchema.Location = new Point(195, 402);
+            btnSaveSchema.Name = "btnSaveSchema";
+            btnSaveSchema.Size = new Size(75, 23);
+            btnSaveSchema.TabIndex = 5;
+            btnSaveSchema.Text = "Save Schema";
+            btnSaveSchema.Click += btnSaveSchema_Click;
             // 
             // lblTableName
             // 
-            this.lblTableName.AutoSize = true;
-            this.lblTableName.Location = new System.Drawing.Point(20, 23);
-            this.lblTableName.Name = "lblTableName";
-            this.lblTableName.Size = new System.Drawing.Size(74, 13);
-            this.lblTableName.Text = "Schema Name:";
-
+            lblTableName.AutoSize = true;
+            lblTableName.Location = new Point(20, 23);
+            lblTableName.Name = "lblTableName";
+            lblTableName.Size = new Size(108, 20);
+            lblTableName.TabIndex = 6;
+            lblTableName.Text = "Schema Name:";
             // 
             // lblFieldName
             // 
-            this.lblFieldName.AutoSize = true;
-            this.lblFieldName.Location = new System.Drawing.Point(20, 63);
-            this.lblFieldName.Name = "lblFieldName";
-            this.lblFieldName.Size = new System.Drawing.Size(63, 13);
-            this.lblFieldName.Text = "Field Name:";
-
+            lblFieldName.AutoSize = true;
+            lblFieldName.Location = new Point(20, 63);
+            lblFieldName.Name = "lblFieldName";
+            lblFieldName.Size = new Size(88, 20);
+            lblFieldName.TabIndex = 7;
+            lblFieldName.Text = "Field Name:";
             // 
             // lblFieldType
             // 
-            this.lblFieldType.AutoSize = true;
-            this.lblFieldType.Location = new System.Drawing.Point(20, 103);
-            this.lblFieldType.Name = "lblFieldType";
-            this.lblFieldType.Size = new System.Drawing.Size(58, 13);
-            this.lblFieldType.Text = "Field Type:";
-
+            lblFieldType.AutoSize = true;
+            lblFieldType.Location = new Point(20, 103);
+            lblFieldType.Name = "lblFieldType";
+            lblFieldType.Size = new Size(79, 20);
+            lblFieldType.TabIndex = 8;
+            lblFieldType.Text = "Field Type:";
             // 
             // lblFieldsList
             // 
-            this.lblFieldsList.AutoSize = true;
-            this.lblFieldsList.Location = new System.Drawing.Point(20, 143);
-            this.lblFieldsList.Name = "lblFieldsList";
-            this.lblFieldsList.Size = new System.Drawing.Size(63, 13);
-            this.lblFieldsList.Text = "Fields List:";
-
+            lblFieldsList.AutoSize = true;
+            lblFieldsList.Location = new Point(19, 229);
+            lblFieldsList.Name = "lblFieldsList";
+            lblFieldsList.Size = new Size(76, 20);
+            lblFieldsList.TabIndex = 9;
+            lblFieldsList.Text = "Fields List:";
             // 
             // SchemaForm
             // 
-            this.ClientSize = new System.Drawing.Size(300, 360);
-            this.Controls.Add(this.txtTableName);
-            this.Controls.Add(this.txtFieldName);
-            this.Controls.Add(this.cmbFieldType);
-            this.Controls.Add(this.lstFields);
-            this.Controls.Add(this.btnAddField);
-            this.Controls.Add(this.btnSaveSchema);
-            this.Controls.Add(this.lblTableName);
-            this.Controls.Add(this.lblFieldName);
-            this.Controls.Add(this.lblFieldType);
-            this.Controls.Add(this.lblFieldsList);
-            this.Name = "SchemaForm";
-            this.Text = "Create Schema";
+            ClientSize = new Size(548, 466);
+            Controls.Add(txtTableName);
+            Controls.Add(txtFieldName);
+            Controls.Add(cmbFieldType);
+            Controls.Add(lstFields);
+            Controls.Add(btnAddField);
+            Controls.Add(btnSaveSchema);
+            Controls.Add(lblTableName);
+            Controls.Add(lblFieldName);
+            Controls.Add(lblFieldType);
+            Controls.Add(lblFieldsList);
+            Name = "SchemaForm";
+            Text = "Create Schema";
+            ResumeLayout(false);
+            PerformLayout();
         }
 
 

@@ -48,11 +48,9 @@ namespace Database3
         {
             try
             {
-                // Ensure that the Schemas property is also serialized with the rest of the database
                 string json = JsonSerializer.Serialize(this, new JsonSerializerOptions
                 {
                     WriteIndented = true,
-                    // Ensure that all object references, including schemas, are properly handled
                     IncludeFields = true
                 });
 
@@ -72,14 +70,17 @@ namespace Database3
                 //var loadedDatabase = JsonSerializer.Deserialize<Database>(json);
                 var loadedDatabase = JsonSerializer.Deserialize<Database>(json, new JsonSerializerOptions
                 {
-                    PropertyNameCaseInsensitive = true, // Makes property names case-insensitive
-                    IncludeFields = true                 // Include private fields if necessary
+                    PropertyNameCaseInsensitive = true, 
+                    IncludeFields = true
                 });
 
                 this.Name = loadedDatabase.Name;
                 this.Tables = loadedDatabase.Tables;
                 this.Schemas = loadedDatabase.Schemas;
             }
+            
+
+
             catch (Exception ex)
             {
                 throw new Exception($"Error loading database: {ex.Message}");
@@ -206,6 +207,8 @@ namespace Database3
     {
         public string Name { get; set; }
         public string Type { get; set; }
+        public TimeSpan? LowerBound { get; set; }
+        public TimeSpan? UpperBound { get; set; }
         public override bool Equals(object obj)
         {
             if (obj is Field otherField)
@@ -218,6 +221,28 @@ namespace Database3
         {
             Name = name;
             Type = type;
+        }
+        public TimeSpan? ConvertStringToTimeSpan(string timeString)
+        {
+            if (TimeSpan.TryParseExact(timeString, @"hh\:mm\:ss",
+                System.Globalization.CultureInfo.InvariantCulture, out TimeSpan timeSpanResult))
+            {
+                return timeSpanResult; 
+            }
+            else
+            {
+                return null;
+            }
+        }
+        public Field()
+        {
+        }
+        public Field(string name, string type, string ts1, string ts2)
+        {
+            Name = name;
+            Type = type;
+            LowerBound = ConvertStringToTimeSpan(ts1);
+            UpperBound = ConvertStringToTimeSpan(ts2);
         }
     }
 
@@ -261,10 +286,31 @@ namespace Database3
         {
             if (obj is Value otherValue)
             {
-                return Equals(FieldValue, otherValue.FieldValue);
+                if (FieldValue is JsonElement jsonElement1 && otherValue.FieldValue is JsonElement jsonElement2)
+                {
+                    if (jsonElement1.ValueKind == JsonValueKind.String && jsonElement2.ValueKind == JsonValueKind.String)
+                    {
+                        string str1 = jsonElement1.GetString();
+                        string str2 = jsonElement2.GetString();
+                        return string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
+                    }
+
+                    if (jsonElement1.ValueKind == JsonValueKind.Number && jsonElement2.ValueKind == JsonValueKind.Number)
+                    {
+                        if (jsonElement1.TryGetInt32(out int int1) && jsonElement2.TryGetInt32(out int int2))
+                        {
+                            return int1 == int2;
+                        }
+                    }
+
+                    return Equals(FieldValue, otherValue.FieldValue);
+                }
             }
+
             return false;
         }
+
+
         public int ToInt()
         {
             if (FieldValue is int intValue)

@@ -136,8 +136,8 @@ namespace Database3
                 _modifiedCells.Add(changedCell);
             }
         }
-        
-        private bool ValidateCell(object value, Field field)
+
+        /*private bool ValidateCell(object value, Field field)
         {
             string fieldType = field.Type.ToLower();
 
@@ -212,6 +212,75 @@ namespace Database3
 
                 default:
                     return false; 
+            }
+
+            return true;
+        }*/
+        private bool ValidateCell(object value, Field field)
+        {
+            string fieldType = field.Type.ToLower();
+
+            switch (fieldType)
+            {
+                case "int":
+                    if (!int.TryParse(value?.ToString(), out _))
+                    {
+                        return false;
+                    }
+                    break;
+
+                case "real":
+                    if (!float.TryParse(value?.ToString(), out _))
+                    {
+                        return false;
+                    }
+                    break;
+
+                case "char":
+                    if (value?.ToString().Length != 1)
+                    {
+                        return false;
+                    }
+                    break;
+
+                case "string":
+                    if (string.IsNullOrWhiteSpace(value?.ToString()))
+                    {
+                        return false;
+                    }
+                    break;
+
+                case "time":
+
+                    if (!TimeSpan.TryParseExact(value?.ToString(), @"hh\:mm\:ss",
+                        System.Globalization.CultureInfo.InvariantCulture, out _))
+                    {
+                        return false;
+                    }
+                    break;
+
+                case "timeint":
+                    if (TimeSpan.TryParseExact(value?.ToString(), @"hh\:mm\:ss",
+                        System.Globalization.CultureInfo.InvariantCulture, out TimeSpan timeValue))
+                    {
+                        if (field.LowerBound.HasValue && field.UpperBound.HasValue)
+                        {
+                            if (timeValue < field.LowerBound.Value || timeValue > field.UpperBound.Value)
+                            {
+                                MessageBox.Show($"Time value for field '{field.Name}' must be between {field.LowerBound.Value} and {field.UpperBound.Value}.");
+                                return false;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Invalid time format in field '{field.Name}'. Please enter time in HH:MM format.");
+                        return false;
+                    }
+                    break;
+
+                default:
+                    return false;
             }
 
             return true;
@@ -459,13 +528,13 @@ namespace Database3
                                         if (TimeSpan.TryParseExact(inputText, @"hh\:mm\:ss",
                                             System.Globalization.CultureInfo.InvariantCulture, out TimeSpan parsedTimeInt))
                                         {
-                                            TimeSpan startTime = new TimeSpan(9, 0, 0);  
-                                            TimeSpan endTime = new TimeSpan(17, 0, 0);   
+                                            TimeSpan? startTime = field.LowerBound;  
+                                            TimeSpan? endTime = field.UpperBound;   
 
                                             if (parsedTimeInt < startTime || parsedTimeInt > endTime)
                                             {
                                                 isValid = false;
-                                                MessageBox.Show($"Invalid timeint value in field '{field.Name}'. Enter a time between 09:00:00 and 17:00:00.");
+                                                MessageBox.Show($"Invalid timeint value in field '{field.Name}'. Enter a time between {field.LowerBound} and {field.UpperBound}.");
                                                 return;
                                             }
                                             inputValue = parsedTimeInt;

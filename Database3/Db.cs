@@ -1,12 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
+
 namespace Database3
 {
+
+    [DataContract]
     public class Database
     {
+        [DataMember]
         public string Name { get; set; }
+        [DataMember]
         public List<Table> Tables { get; set; }
-        public List<Schema> Schemas;
+        [DataMember]
+        public List<Schema> Schemas { get; set; }
 
         public void AddSchema(Schema schema)
         {
@@ -23,6 +34,14 @@ namespace Database3
 
 
             Tables.Add(table);
+        }
+        public List<Schema> GetSchemas()
+        {
+            return this.Schemas;
+        }
+        public void DeleteSchema(int id)
+        {
+
         }
         public void CreateTable(string name, Schema schema)
         {
@@ -48,9 +67,11 @@ namespace Database3
         {
             try
             {
+                // Ensure that the Schemas property is also serialized with the rest of the database
                 string json = JsonSerializer.Serialize(this, new JsonSerializerOptions
                 {
                     WriteIndented = true,
+                    // Ensure that all object references, including schemas, are properly handled
                     IncludeFields = true
                 });
 
@@ -70,15 +91,15 @@ namespace Database3
                 //var loadedDatabase = JsonSerializer.Deserialize<Database>(json);
                 var loadedDatabase = JsonSerializer.Deserialize<Database>(json, new JsonSerializerOptions
                 {
-                    PropertyNameCaseInsensitive = true, 
-                    IncludeFields = true
+                    PropertyNameCaseInsensitive = true, // Makes property names case-insensitive
+                    IncludeFields = true                 // Include private fields if necessary
                 });
 
                 this.Name = loadedDatabase.Name;
                 this.Tables = loadedDatabase.Tables;
                 this.Schemas = loadedDatabase.Schemas;
             }
-            
+
 
 
             catch (Exception ex)
@@ -88,12 +109,16 @@ namespace Database3
         }
     }
 
-
+    [DataContract]
     public class Table
     {
+        [DataMember]
         public string Name { get; set; }
+        [DataMember]
         public Schema Schema { get; set; }
+        [DataMember]
         public List<Row> Rows { get; set; }
+        [DataMember]
         private int _nextId;
 
         public Table(string name, Schema schema)
@@ -138,7 +163,6 @@ namespace Database3
                 Rows[index] = row;
             }
         }
-
         public Table Difference(Table anotherTable)
         {
             if (!Schema.Equals(anotherTable.Schema))
@@ -168,10 +192,12 @@ namespace Database3
             return differenceTable;
         }
     }
-
+    [DataContract]
     public class Schema
     {
+        [DataMember]
         public List<Field> Fields { get; set; }
+        [DataMember]
         public string Name { get; set; }
 
         public Schema(List<Field> fields, string Name)
@@ -202,12 +228,16 @@ namespace Database3
             return false;
         }
     }
-
+    [DataContract]
     public class Field
     {
+        [DataMember]
         public string Name { get; set; }
+        [DataMember]
         public string Type { get; set; }
+        [DataMember]
         public TimeSpan? LowerBound { get; set; }
+        [DataMember]
         public TimeSpan? UpperBound { get; set; }
         public override bool Equals(object obj)
         {
@@ -227,7 +257,7 @@ namespace Database3
             if (TimeSpan.TryParseExact(timeString, @"hh\:mm\:ss",
                 System.Globalization.CultureInfo.InvariantCulture, out TimeSpan timeSpanResult))
             {
-                return timeSpanResult; 
+                return timeSpanResult;
             }
             else
             {
@@ -245,9 +275,10 @@ namespace Database3
             UpperBound = ConvertStringToTimeSpan(ts2);
         }
     }
-
+    [DataContract]
     public class Row
     {
+        [DataMember]
         public List<Value> Values { get; set; }
 
         public Row(List<Value> values)
@@ -273,9 +304,10 @@ namespace Database3
             return false;
         }
     }
-
+    [DataContract]
     public class Value
     {
+        [DataMember]
         public object FieldValue { get; set; }
 
         public Value(object fieldValue)
@@ -286,30 +318,85 @@ namespace Database3
         {
             if (obj is Value otherValue)
             {
-                if (FieldValue is JsonElement jsonElement1 && otherValue.FieldValue is JsonElement jsonElement2)
+                var thisValue = ConvertFieldValue(FieldValue);
+                var otherConvertedValue = ConvertFieldValue(otherValue.FieldValue);
+
+                if (thisValue is string strValue1 && otherConvertedValue is string strValue2)
                 {
-                    if (jsonElement1.ValueKind == JsonValueKind.String && jsonElement2.ValueKind == JsonValueKind.String)
-                    {
-                        string str1 = jsonElement1.GetString();
-                        string str2 = jsonElement2.GetString();
-                        return string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
-                    }
-
-                    if (jsonElement1.ValueKind == JsonValueKind.Number && jsonElement2.ValueKind == JsonValueKind.Number)
-                    {
-                        if (jsonElement1.TryGetInt32(out int int1) && jsonElement2.TryGetInt32(out int int2))
-                        {
-                            return int1 == int2;
-                        }
-                    }
-
-                    return Equals(FieldValue, otherValue.FieldValue);
+                    return string.Equals(strValue1, strValue2, StringComparison.OrdinalIgnoreCase);
                 }
+                if (thisValue is int intValue1 && otherConvertedValue is int intValue2)
+                {
+                    return intValue1 == intValue2;
+                }
+
+                if (thisValue is double doubleValue1 && otherConvertedValue is double doubleValue2)
+                {
+                    return Math.Abs(doubleValue1 - doubleValue2) < 0.000001;
+                }
+
+                if (thisValue is float floatValue1 && otherConvertedValue is float floatValue2)
+                {
+                    return Math.Abs(floatValue1 - floatValue2) < 0.000001f;
+                }
+
+                if (thisValue is char charValue1 && otherConvertedValue is char charValue2)
+                {
+                    return charValue1 == charValue2;
+                }
+
+                if (thisValue is bool boolValue1 && otherConvertedValue is bool boolValue2)
+                {
+                    return boolValue1 == boolValue2;
+                }
+
+                if (thisValue is IConvertible && otherConvertedValue is IConvertible)
+                {
+                    try
+                    {
+                        double val1 = Convert.ToDouble(thisValue);
+                        double val2 = Convert.ToDouble(otherConvertedValue);
+                        return Math.Abs(val1 - val2) < 0.000001;
+                    }
+                    catch
+                    {
+                        return Equals(thisValue, otherConvertedValue);
+                    }
+                }
+
+                return Equals(thisValue, otherConvertedValue);
             }
 
             return false;
         }
+        private object ConvertFieldValue(object fieldValue)
+        {
+            if (fieldValue is JsonElement jsonElement)
+            {
+                switch (jsonElement.ValueKind)
+                {
+                    case JsonValueKind.String:
+                        return jsonElement.GetString();
+                    case JsonValueKind.Number:
+                        if (jsonElement.TryGetInt32(out int intValue))
+                        {
+                            return intValue;
+                        }
+                        if (jsonElement.TryGetDouble(out double doubleValue))
+                        {
+                            return doubleValue;
+                        }
+                        break;
+                    case JsonValueKind.True:
+                    case JsonValueKind.False:
+                        return jsonElement.GetBoolean();
+                    case JsonValueKind.Null:
+                        return null;
+                }
+            }
 
+            return fieldValue;
+        }
 
         public int ToInt()
         {
@@ -330,8 +417,6 @@ namespace Database3
             return FieldValue.ToString();
         }
     }
+
+
 }
-
-
-
-
